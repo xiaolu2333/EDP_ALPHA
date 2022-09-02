@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <style>
+
+        .subheader {
+            margin-top: 30px;
+            margin-right: 30px;
+            text-align: center;
+        }
+
+        .subheader-option {
+            float: left;
+            margin-right: 20px;
+        }
+
+        .subheader-user {
+            float: right;
+            margin-right: 20px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h2>EDP</h2>
+    <div class="subheader">
+        <a href="#" class="subheader-option">文件</a>
+        <a href="#" class="subheader-option">工具</a>
+        <a href="#" class="subheader-option">帮助</a>
+        <a href="#" class="subheader-option">三员相关的操作</a>
+        {% if user %}
+            <a href="{% url 'edp-user:index' %}" class="subheader-user">hello, {{ user.username }}</a>
+        {% else %}
+            <a href="{% url 'edp-user:index' %}" class="subheader-user">用户中心</a>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
