@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 
     'edp_index.apps.EdpIndexConfig',
     'edp_user.apps.EdpUserConfig',
@@ -136,3 +137,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 自定义用户模型
 AUTH_USER_MODEL = 'edp_user.UserProfile'
+
+# rest_framework
