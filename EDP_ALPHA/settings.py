@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,7 +35,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
+    'rest_framework_simplejwt',
 
     'edp_index.apps.EdpIndexConfig',
     'edp_user.apps.EdpUserConfig',
@@ -138,4 +140,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 自定义用户模型
 AUTH_USER_MODEL = 'edp_user.UserProfile'
 
+LOGIN_REDIRECT_URL = '/user/login/'
+
 # rest_framework
+# REST_FRAMEWORK = {
+#     # 使用默认的认证模式
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     )
+# }
+#
+# SIMPLE_JWT = {
+#     # token 有效期
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+# }

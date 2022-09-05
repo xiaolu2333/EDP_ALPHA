@@ -1,5 +1,5 @@
 from django.contrib.auth import logout, login, authenticate
-from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from rest_framework import status
@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from edp_user.forms import UserRegisterForm, EDPUserLoginForm
 from edp_user.models import UserProfile
+from edp_user.serializers import UserInfoSerializer
 
 
 def index(request):
@@ -59,32 +60,46 @@ def user_login(request):
             return render(request, 'edp_user/login.html', {'form': EDPUserLoginForm()})
 
 
-from edp_user.serializers import UserInfoSerializer
-from rest_framework.renderers import JSONRenderer
-
-
-
-class JSONResponse(HttpResponse):
-    """
-    An HttpResponse that renders its content into JSON.
-    """
-
-    def __init__(self, data, **kwargs):
-        content = JSONRenderer().render(data)
-        kwargs['content_type'] = 'application/json'
-        super(JSONResponse, self).__init__(content, **kwargs)
-
 @api_view(['GET', 'POST'])
-def user_serializer(request):
+@login_required
+def user_list(request):
+    """用户信息列表"""
     # 序列化
     if request.method == 'GET':
         user_info = UserProfile.objects.all()
         serializer = UserInfoSerializer(user_info, many=True)
         return Response(serializer.data)
-    if request.method == 'POST':
+    # 反序列化
+    elif request.method == 'POST':
         data = JSONParser().parse(request)
         serializer = UserInfoSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return JSONResponse(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'POST'])
+@login_required
+def user_detail(request, pk):
+    """用户信息详情"""
+    try:
+        user_info = UserProfile.objects.get(pk=pk)
+    except UserProfile.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = UserInfoSerializer(user_info)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = UserInfoSerializer(user_info, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        user_info.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
