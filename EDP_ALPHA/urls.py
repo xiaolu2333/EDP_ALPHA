@@ -19,6 +19,8 @@ from rest_framework_simplejwt.views import (
 )
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.documentation import include_docs_urls
+
 
 # from edp_user.utils.jwt_token import MyTokenObtainPairView
 
@@ -32,4 +34,5 @@ urlpatterns = [
 
     path('', include(('edp_index.urls', 'edp_index'), namespace='edp-index')),
     path('user/', include(('edp_user.urls', 'edp_user'), namespace='edp-user')),
+    path('docs/', include_docs_urls(title='USER INFO API', authentication_classes=[], permission_classes=[])),
 ]

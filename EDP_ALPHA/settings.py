@@ -143,12 +143,13 @@ AUTH_USER_MODEL = 'edp_user.UserProfile'
 LOGIN_REDIRECT_URL = '/user/login/'
 
 # rest_framework
-# REST_FRAMEWORK = {
-#     # 使用默认的认证模式
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     )
-# }
+REST_FRAMEWORK = {
+    # # 使用默认的认证模式
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # )
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+}
 #
 # SIMPLE_JWT = {
 #     # token 有效期
