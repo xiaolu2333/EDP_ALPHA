@@ -20,7 +20,7 @@ from rest_framework_simplejwt.views import (
 from django.contrib import admin
 from django.urls import path, include
 
-from edp_user.utils.jwt_token import MyTokenObtainPairView
+# from edp_user.utils.jwt_token import MyTokenObtainPairView
 
 
 urlpatterns = [
