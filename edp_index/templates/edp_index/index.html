@@ -33,7 +33,7 @@
         <a href="#" class="subheader-option">文件</a>
         <a href="#" class="subheader-option">工具</a>
         <a href="#" class="subheader-option">帮助</a>
-        {% if user.role != "OGU" %}
+        {% if user.username and user.role != "OGU" %}
             <a href="#" class="subheader-option">三员测试菜单</a>
         {% endif %}
         {% if user.username %}

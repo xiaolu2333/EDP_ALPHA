@@ -1,5 +1,6 @@
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from rest_framework import status
@@ -29,8 +30,12 @@ def user_register(request):
         role = request.POST.get('role')
         status = request.POST.get('status')
         if username and email and password and role and status:
-            user = UserProfile.objects.create_user(username=username, email=email, password=password, role=role,
+            try:
+                user = UserProfile.objects.create_user(username=username, email=email, password=password, role=role,
                                                    status=status)
+            except Exception as e:
+                raise "用户名 {0} 已存在！{1}".format(username, e.args)
+            # 不向模板传递 user 上下文时，模板日嗯然可使用 user 来代表当前用户对象（基于登陆信息，但因此会缺少用户模型中的其他信息）
             return render(request, 'edp_index/index.html', {'user': user})
 
 
