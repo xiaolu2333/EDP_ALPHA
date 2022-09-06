@@ -1,5 +1,6 @@
-from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth import logout, login, authenticate, hashers
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -24,45 +25,49 @@ def user_register(request):
         register_form = UserRegisterForm()
         return render(request, 'edp_user/register.html', {'form': register_form})
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        role = request.POST.get('role')
-        status = request.POST.get('status')
-        if username and email and password and role and status:
+        register_form = UserRegisterForm(request.POST)
+        if register_form.is_valid():
+            register_form.cleaned_data.pop('confirm_password')  # 清楚该字段
+            register_form.cleaned_data['password'] = hashers.make_password(
+                register_form.cleaned_data['password'])  # 密码加密
+            user = UserProfile(**register_form.cleaned_data)  # 实例化模型
             try:
-                user = UserProfile.objects.create_user(username=username, email=email, password=password, role=role,
-                                                   status=status)
-            except Exception as e:
-                raise "用户名 {0} 已存在！{1}".format(username, e.args)
-            # 不向模板传递 user 上下文时，模板日嗯然可使用 user 来代表当前用户对象（基于登陆信息，但因此会缺少用户模型中的其他信息）
+                user.save()  # 保存模型实例
+            except IntegrityError:  # 捕获整合错误：因为User 模型默认 username 保持唯一性
+                raise ValidationError(  # 抛出注册表单自定义的异常
+                    register_form.error_messages['username_existed']
+                )
+            # 不向模板传递 user 上下文时，模板仍然可使用 user 来代表当前用户对象（基于登陆信息，但因此会缺少用户模型中的其他信息）
             return render(request, 'edp_index/index.html', {'user': user})
 
 
 def user_logout(request):
+    """用户登出"""
     logout(request)
     request.session.flush()
     return render(request, 'edp_index/index.html')
 
 
 def user_login(request):
-    if request.method == 'GET':
-        form = EDPUserLoginForm()
-        return render(request, 'edp_user/login.html', {'form': form})
+    """用户登陆"""
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        if username and password:
+        login_form = EDPUserLoginForm(request.POST)
+        if login_form.is_valid():
+            username = login_form.cleaned_data.get("username")
+            password = login_form.cleaned_data.get("password")
             # 用户验证
             user = authenticate(request, username=username, password=password)
-            if user:
+            if user is not None:
                 login(request, user)
-                user = UserProfile.objects.get(username=user)
+                # 获取完整的用户信息
+                user = UserProfile.objects.filter(username=username).first()
                 return redirect(reverse('edp-index:index'), {'user': user})
             else:
-                return render(request, 'edp_user/login.html', {'user': user})
+                return render(request, 'edp_user/login.html', {'form': EDPUserLoginForm()})
         else:
             return render(request, 'edp_user/login.html', {'form': EDPUserLoginForm()})
+    login_form = EDPUserLoginForm()
+    return render(request, 'edp_user/login.html', {'form': login_form})
 
 
 @api_view(['GET', 'POST'])

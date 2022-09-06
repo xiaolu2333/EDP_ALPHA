@@ -1,62 +1,70 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext, gettext_lazy as _
+
 from edp_user.models import UserProfile
 
 
 class UserRegisterForm(forms.Form):
+    error_messages = {
+        'username_existed': _('The same username already exists, please change it!'),
+        'password_short': _('The length of password is less than 6!'),
+        'password_mismatch': _('The two passwords are not the same!')
+    }
+
     username = forms.CharField()
-    email = forms.CharField()
-    password = forms.CharField()
-    confirm_password = forms.CharField()
+    email = forms.CharField(widget=forms.EmailInput())
+    password = forms.CharField(
+        min_length=6,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+        help_text="密码至少需要六位！",
+        strip=False,
+    )
+    confirm_password = forms.CharField(
+        min_length=6,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+        help_text="密码至至少要六位！",
+        strip=False,
+    )
     role = forms.ChoiceField(choices=UserProfile.ROLE)
     status = forms.ChoiceField(choices=UserProfile.STATUS)
 
-
-    class Meta:
-        model = UserProfile
-        fields = ('username', 'email', 'password', 'confirm_password', 'role', 'status')
-        labels = {
-            'username': '姓名',
-            'email': '邮箱',
-            'password': '密码',
-            'confirm_password': '确认密码',
-            'role': '角色',
-            'status': '状态',
-        }
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '请输入用户名', }),
-            'password': forms.PasswordInput(
-                attrs={'class': 'form-control', 'placeholder': '请输入密码', }),
-            'confirm_password': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': '请输入密码'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': '请输入邮箱'}),
-            'role': forms.Select(attrs={'class': 'form-control', 'placeholder': '请选择身份'}),
-            'status': forms.Select(attrs={'class': 'form-control', 'placeholder': '请选择状态'}),
-        }
+    def clean_password(self):
+        """检查密码长度是否大于6"""
+        if len(self.cleaned_data['password']) < 6:
+            raise ValidationError(
+                self.error_messages['password_short'],
+            )
+        return self.cleaned_data['password']
 
     def clean_confirm_password(self):
+        """检查两次输入的密码是否一致"""
         password = self.cleaned_data['password']
         confirm_password = self.cleaned_data['confirm_password']
         if password != confirm_password:
-            raise forms.ValidationError('两次密码不一致！')
+            raise ValidationError(
+                self.error_messages['password_mismatch'],
+            )
         return confirm_password
 
-    def clean(self):
-        super().clean()
-        username = self.cleaned_data['username']
-        if UserProfile.objects.exclude(pk=self.instance.pk).filter(username=username).exists():
-            raise forms.ValidationError(f'Username "{username}" is already in use.')
-        return username
 
-
-class EDPUserLoginForm(forms.ModelForm):
-    username = forms.CharField()
-    password = forms.CharField()
-
-    class Meta:
-        model = UserProfile
-        fields = ('username', 'password')
-
-    widgets = {
-        'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '请输入用户名', }),
-        'password': forms.PasswordInput(
-            attrs={'class': 'form-control', 'placeholder': '请输入密码', }),
+class EDPUserLoginForm(forms.Form):
+    error_messages = {
+        'password_short': _('The length of password is less than 6!'),
     }
+
+    username = forms.CharField()
+    password = forms.CharField(
+        min_length=6,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
+        help_text="密码至少需要六位！",
+        strip=False,
+    )
+
+    def clean_password(self):
+        """检查密码长度是否大于6"""
+        if len(self.cleaned_data['password']) < 6:
+            raise ValidationError(
+                self.error_messages['password_short'],
+            )
+        return self.cleaned_data['password']
